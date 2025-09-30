@@ -34,8 +34,10 @@ blueprint:
         action: {}
 variables:
   grid_area_var: !input grid_area
-  # Convert the selected hours (e.g., 1.25) into the corresponding number of 15-minute periods (1.25 * 4 = 5).
-  expensive_periods_var: "{{ (!input expensive_hours | float * 4) | int }}"
+  # First, get the value from the input slider.
+  expensive_hours_input: !input expensive_hours
+  # Then, use that value in a template to perform the calculation.
+  expensive_periods_var: "{{ (expensive_hours_input | float(0) * 4) | int }}"
 
 trigger:
   - platform: time_pattern
@@ -49,12 +51,12 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {# The logic now uses the converted 'expensive_periods_var' for comparison against the 96 price points. #}
-              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] > states(grid_area_var) | float }}
+              {# The logic now uses the correctly calculated 'expensive_periods_var' for comparison. #}
+              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] > states(grid_area_var) | float(0) }}
         sequence: !input cheap
       - conditions:
           - condition: template
             value_template: >-
-              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] < states(grid_area_var) | float }}
+              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] < states(grid_area_var) | float(0) }}
         sequence: !input expensive
     default: []
