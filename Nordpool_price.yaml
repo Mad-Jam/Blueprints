@@ -46,7 +46,6 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {# The logic now uses the correctly calculated 'expensive_periods_var' for comparison. #}
               {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] > states(grid_area_var) | float(0) }}
         sequence: !input cheap
       - conditions:
