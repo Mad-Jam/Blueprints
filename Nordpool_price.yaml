@@ -34,15 +34,10 @@ blueprint:
         action: {}
 variables:
   grid_area_var: !input grid_area
-  # First, get the value from the input slider.
   expensive_hours_input: !input expensive_hours
-  # Then, use that value in a template to perform the calculation.
   expensive_periods_var: "{{ (expensive_hours_input | float(0) * 4) | int }}"
 
 trigger:
-  - platform: time_pattern
-    # This will trigger the automation every 15 minutes.
-    minutes: "/15"
   - platform: state
     entity_id: !input grid_area
 
