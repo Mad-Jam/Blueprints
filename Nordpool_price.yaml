@@ -35,7 +35,7 @@ blueprint:
 variables:
   grid_area_var: !input grid_area
   expensive_hours_input: !input expensive_hours
-  expensive_periods_var: "{{ (expensive_hours_input | float(0) * 4) | int }}"
+  expensive_periods_var: "{{ (expensive_hours_input | float(0) * 4) | int(0) }}"
 
 trigger:
   - platform: state
