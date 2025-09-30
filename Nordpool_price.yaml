@@ -1,55 +1,60 @@
 blueprint:
-    name: Nordpool price cheap expensive
-    description: This blueprints uses the nordpool integration and lets you choose howe many hours you wil define as expesive, and make automations based on that information.
-    domain: automation
-    input: 
-        grid_area:
-            name: Grid area sensor
-            description: This is your grid area sensor
-            selector:
-                entity:
-                    domain: sensor
-                    integration: nordpool
-        expensive_hours:
-          name: Expensive hours
-          description: numbers of Expensive hours
-          default: 12
-          selector:
-            number:
-              min: 0.0
-              max: 24
-              mode: slider
-              step: 1.0
-        expensive:
-          name: Expensive
-          description: Action to run on expensive
-          default: []
-          selector:
-            action: {}
-        cheap:
-          name: Cheap
-          description: Action to run on cheap
-          default: []
-          selector:
-            action: {}
+  name: Nordpool price cheap expensive (15-minute tariff)
+  description: This blueprint uses the Nordpool integration with 15-minute tariffs. Select how many hours should be defined as expensive, and create automations based on that. You can use 15-minute increments (e.g., 2.5 for 2 hours and 30 minutes).
+  domain: automation
+  input:
+    grid_area:
+      name: Grid area sensor
+      description: This is your Nordpool sensor that provides 15-minute price data.
+      selector:
+        entity:
+          domain: sensor
+          integration: nordpool
+    expensive_hours:
+      name: Expensive hours
+      description: Select the total number of hours per day to be considered expensive. Allows for 15-minute increments (e.g., 1.25 = 1h 15m).
+      default: 12
+      selector:
+        number:
+          min: 0
+          max: 24
+          mode: slider
+          step: 0.25
+    expensive:
+      name: Expensive
+      description: Action to run during the most expensive periods.
+      default: []
+      selector:
+        action: {}
+    cheap:
+      name: Cheap
+      description: Action to run during the cheapest periods.
+      default: []
+      selector:
+        action: {}
 variables:
-  grid_area_var: !input 'grid_area'
-  expensive_hours_var: !input 'expensive_hours'
+  grid_area_var: !input grid_area
+  # Convert the selected hours (e.g., 1.25) into the corresponding number of 15-minute periods (1.25 * 4 = 5).
+  expensive_periods_var: "{{ (!input expensive_hours | float * 4) | int }}"
 
 trigger:
+  - platform: time_pattern
+    # This will trigger the automation every 15 minutes.
+    minutes: "/15"
   - platform: state
-    entity_id: !input 'grid_area'
+    entity_id: !input grid_area
 
 action:
-    - choose:
+  - choose:
       - conditions:
           - condition: template
             value_template: >-
-                {{ (state_attr(grid_area_var,'today')|sort)[24 - expensive_hours_var |int] > states(grid_area_var)|float }}
-        sequence: !input 'cheap'
+              {# The logic now uses the converted 'expensive_periods_var' for comparison against the 96 price points. #}
+              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] > states(grid_area_var) | float }}
+        sequence: !input cheap
       - conditions:
           - condition: template
             value_template: >-
-                {{ (state_attr(grid_area_var,'today')|sort)[24 - expensive_hours_var |int] < states(grid_area_var)|float }}
-        sequence: !input 'expensive'
-      default: []
+              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] < states(grid_area_var) | float }}
+        sequence: !input expensive
+    default: []
