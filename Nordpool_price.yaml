@@ -46,11 +46,11 @@ action:
       - conditions:
           - condition: template
             value_template: >-
-              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] > states(grid_area_var) | float(0) }}
+              {{ (state_attr(grid_area_var, 'today') | sort )[96 - expensive_periods_var | int(0) ] > states(grid_area_var) | float(0) }}
         sequence: !input cheap
       - conditions:
           - condition: template
             value_template: >-
-              {{ (state_attr(grid_area_var, 'today') | sort)[96 - expensive_periods_var] < states(grid_area_var) | float(0) }}
+              {{ (state_attr(grid_area_var, 'today') | sort )[96 - expensive_periods_var | int(0) ] < states(grid_area_var) | float(0) }}
         sequence: !input expensive
     default: []
